@@ -1862,14 +1862,15 @@ window.HunColor = (function () {
 window.HunBuf = (function () {
   const DEF = {
     dmg_all:    { name: '造成傷害',   step: 3,  base: 0,   icon: '⚔️', desc: '玩家造成的所有傷害增加（普攻、技能、持續傷害）' },
-    dmg_single: { name: '單體傷害',   step: 9,  base: 0,   icon: '🎯', desc: '二連矢、衝鋒箭 等單體技能傷害增加' },
-    dmg_aoe:    { name: '群體傷害',   step: 9,  base: 0,   icon: '🌧️', desc: '箭雨 等群體技能傷害增加' },
-    dmg_dot:    { name: '持續傷害',   step: 15, base: 0,   icon: '☠️', desc: '中毒、著火 等持續傷害增加' },
-    mhp:        { name: 'MHP',        step: 6,  base: 0,   icon: '❤️', desc: '最大 HP 增加' },
-    hp_heal:    { name: 'HP自然恢復量', step: 6,  base: 0,   icon: '💖', desc: 'HP 自然恢復量增加（道具不可）' },
+    dmg_normal: { name: '普通攻擊傷害', step: 9, base: 0,  icon: '🏹', desc: '普通攻擊傷害增加' },
+    dmg_single: { name: '技能單體傷害', step: 6, base: 0,  icon: '🎯', desc: '二連矢、衝鋒箭 等單體技能傷害增加' },
+    dmg_aoe:    { name: '技能群體傷害', step: 6, base: 0,  icon: '🌧️', desc: '箭雨 等群體技能傷害增加' },
+    dmg_dot:    { name: '持續傷害',   step: 12, base: 0,   icon: '☠️', desc: '中毒、著火 等持續傷害增加' },
+    mhp:        { name: 'MHP',        step: 3,  base: 0,   icon: '❤️', desc: '最大 HP 增加' },
+    hp_heal:    { name: 'HP自然恢復量', step: 3,  base: 0,   icon: '💖', desc: 'HP 自然恢復量增加（道具不可）' },
     hp_spd:     { name: 'HP恢復速度', step: 3,  base: 100, icon: '⏩', desc: 'HP 自然恢復頻率加快（200 % = 6 秒變 3 秒）' },
     msp:        { name: 'MSP',        step: 3,  base: 0,   icon: '💧', desc: '最大 SP 增加' },
-    sp_heal:    { name: 'SP自然恢復量', step: 6,  base: 0,   icon: '💙', desc: 'SP 自然恢復量增加（道具不可）' },
+    sp_heal:    { name: 'SP自然恢復量', step: 3,  base: 0,   icon: '💙', desc: 'SP 自然恢復量增加（道具不可）' },
     sp_spd:     { name: 'SP恢復速度', step: 3,  base: 100, icon: '⏩', desc: 'SP 自然恢復頻率加快（200 % = 6 秒變 3 秒）' },
     aspd:       { name: '攻擊速度',   step: 3,  base: 0,   icon: '⚡', desc: '攻擊速度增加' }
   };
@@ -1939,7 +1940,7 @@ window.HunBuf = (function () {
   const CFG = {
     sprite: './HunMob/HunMA.gif',
     dealDamage: true,
-    spawnInterval: 3.0,
+    spawnInterval: 6.0,
     levelUpEvery: 9,
     maxLv: 999,
     rank: 1,
@@ -2010,7 +2011,7 @@ window.HunBuf = (function () {
       '.hm-glow{animation:hmGlow .4s infinite}@keyframes hmGlow{50%{filter:drop-shadow(0 0 23px red) brightness(1.3)}}' +
       '.hm-bar{position:absolute;width:90px;height:15px;z-index:6;pointer-events:none;background:rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.4);border-radius:5px;overflow:hidden}' +
       '.hm-hp,.hm-dp{position:absolute;inset:0 auto 0 0;height:100%;transition:width .1s linear}.hm-hp{background:#e74c3c}.hm-dp{background:#fff}' +
-      '.hm-cd{position:absolute;width:60px;height:15px;z-index:5;pointer-events:none;display:none;overflow:hidden}' +
+      '.hm-cd{position:absolute;width:60px;height:6px;z-index:5;pointer-events:none;display:none;overflow:hidden}' +
       '.hm-st{position:absolute;width:60px;z-index:5;pointer-events:none;display:none}.hm-st i{display:block;height:9px;margin-bottom:3px;background:rgba(0,0,0,.75);border:1px solid #000;box-sizing:border-box;overflow:hidden}.hm-st i b{display:block;height:100%;float:left;transition:width .1s linear}' +
       '.hm-cdf{height:100%;background:#000;float:left;transition:width .1s linear}' +
       '.hm-text{position:absolute;width:300px;text-align:center;font-weight:bold;z-index:60;pointer-events:none;' +
@@ -2196,7 +2197,8 @@ window.HunBuf = (function () {
   function spawnWave() {
     spawnCount++;
     const levelUpWave = spawnCount % CFG.levelUpEvery === 0;
-    if (levelUpWave && level < CFG.maxLv) { level++; hooks.onLevelUp(level); ev.wave = 1; armForLevel(); }
+    if (levelUpWave && level < CFG.maxLv) { level++; hooks.onLevelUp(level); ev.wave = 1; armForLevel();
+      if (route === 'evil' && ev.n < 3 && !(ev.warnT > 0) && (ev.lvCnt = (ev.lvCnt || 0) + 1) % 2 === 0) { ev.warnT = 3; showWarning(); } }
     else ev.wave++;
     spawnGroup(levelUpWave);
     if (ev.armed && ev.wave >= ev.stopAt) { ev.armed = false; ev.phase = 'halt'; ev.timer = 0; }
@@ -2204,15 +2206,9 @@ window.HunBuf = (function () {
   function toCamp(merchant) {                            // 交給營地視窗（旅人 / 荒廢）
     ev.phase = 'ask'; hooks.onCheckpoint(level, { merchant: !!merchant, route });
   }
-  function afterHalt() {                                 // 停怪、清場 3 秒後的抽選
-    const r = pct();
-    if (route === 'normal' || (route === 'hard' && level % 6 === 0)) {
-      const T = route === 'normal' ? EVENT.normal : EVENT.hard6;
-      if (r < T.boss) { ev.after = 'camp6'; startWarn('bossWait'); return; }
-      return toCamp(r < T.boss + T.merchant);
-    }
-    if (r < EVENT.hard3.boss) { ev.after = 'continue'; startWarn('bossWait'); return; }
-    ev.phase = 'run'; spawnTimer = CFG.spawnInterval;       // 91 %：繼續再打 3 級
+  function afterHalt() {                                 // 停怪、清場 3 秒後：必定出 BOSS（普通 1 隻；困難 2 隻，每個 3 級數各一隻）
+    ev.after = (route === 'normal' || level % 6 === 0) ? 'camp6' : 'continue';
+    startWarn('bossWait');
   }
   function afterBoss() {                                 // 擊殺 BOSS、清場 3 秒後
     if (ev.after === 'continue') { ev.phase = 'run'; spawnTimer = CFG.spawnInterval; return; }
@@ -2531,9 +2527,13 @@ window.HunBuf = (function () {
   function update(dt) {
     gameTime += dt;
     statusUpdate(dt); tipUpdate();
-    // 怪物生成速度固定每 3 秒一波；事件進行中（停怪 / BOSS / 營地）不生成
+    // 怪物生成速度固定每 6 秒一波；事件進行中（停怪 / BOSS / 營地）不生成
     if (ev.phase === 'run') {
       if ((spawnTimer += dt) >= CFG.spawnInterval / ((global.HunAreaSpeed || 100) / 100)) { spawnTimer = 0; spawnWave(); }
+      if (route === 'evil' && ev.warnT > 0 && (ev.warnT -= dt) <= 0) {      // 險惡：小怪照常生成，每 2 級警告 3 秒後出 BOSS（共 3 隻）
+        ev.warnT = 0; hideWarning(); spawnBoss(); ev.n++;
+        if (ev.n >= 3) { ev.phase = 'evilEnd'; ev.timer = 0; }
+      }
     } else tickEvent(dt);
     for (let i = monsters.length - 1; i >= 0; i--) {
       const m = monsters[i];
@@ -2557,7 +2557,7 @@ window.HunBuf = (function () {
     resume(opts) {                                           // 營地選完路線後繼續
       route = (opts && (opts.route === 'hard' || opts.route === 'evil')) ? opts.route : 'normal';
       ev.armed = false; ev.boss = null; spawnTimer = CFG.spawnInterval;
-      if (route === 'evil') { ev.phase = 'evilWait'; ev.timer = 0; ev.delay = 0; ev.n = 0; } else ev.phase = 'run';   // 警告 3 秒後出現第一隻
+      ev.phase = 'run'; ev.n = 0; ev.lvCnt = 0; ev.warnT = 0;   // 警告 3 秒後出現第一隻
     },
     route: () => route,
     phase: () => ev.phase,
@@ -2610,7 +2610,7 @@ window.HunBuf = (function () {
     ds: { 1: 380, 2: 1140, 3: 3420 }, rain: { 1: 250, 2: 750, 3: 2250 }, charge: { 1: 150, 2: 450, 3: 1350 },
     conc: { 1: 12, 2: 36, 3: 108 }, dex: { 1: 10, 2: 30, 3: 90 }, kb: { 1: 30, 2: 60, 3: 90 },
     eagleProb: { 1: 9, 2: 12, 3: 15 }, eagleExtra: { 1: 300, 2: 450, 3: 600 },
-    plusPct: { '46': 15, '47': 15, '148': 15, '45': 15, '43': 30, '44': 0 }
+    plusPct: { '46': 15, '47': 15, '148': 15, '45': 15, '43': 15, '44': 0 }
   };
   const SK = {
     '47':  { name: '箭雨',     icon: './HunSkills/47.png',  sp: 15, type: 'attack',  active: true,  sub: '主動攻擊技能' },
@@ -2724,7 +2724,7 @@ window.HunBuf = (function () {
   const bufMul = cat => HunBuf.mul('dmg_all') * (cat ? HunBuf.mul(cat) : 1);
   function calcDamage(m, pct, isCrit, xc) {
     const atk = Math.floor(Math.floor((global.HunPrAtk || 0) * (global.HunStatAtkMul || 1)) * (100 + (global.HunPrPAtk || 0)) / 100);     // 詛咒：ATK −30 %
-    return HunCombat.damage(atk, pct, m.res, m.defHard, m.defSoft, isCrit ? (global.HunPrCritPct || 140) + (xc || 0) : 0);
+    return Math.floor(HunCombat.damage(atk, pct, m.res, m.defHard, m.defSoft, isCrit ? (global.HunPrCritPct || 140) + (xc || 0) : 0) * (global.HunPrDmgAff || 1));   // 裝備詞條：全種族 / 全體型 / 全屬性 / 遠程傷害 %
   }
   const rollCrit = (m, xc) => Math.random() * 100 < Math.max(0, (global.HunPrCri || 0) + (xc || 0) - m.criRes);
 
@@ -2778,18 +2778,14 @@ window.HunBuf = (function () {
     const isCrit = rollCrit(m, xCri);
     play(isCrit ? 'crit' : 'hit');
     if (ds) setTimeout(() => play(isCrit ? 'crit' : 'hit'), 120);
-    const cat = ds ? 'dmg_single' : (a.type === 'rain' ? 'dmg_aoe' : null);
+    const cat = ds ? 'dmg_single' : (a.type === 'rain' ? 'dmg_aoe' : (a.type === 'normal' ? 'dmg_normal' : null));
     const dmg = Math.floor(calcDamage(m, a.pct * (dmgMul || 1), isCrit, xCri) * bufMul(cat));
     const skillCol = a.type === 'normal' ? '#ffffff' : (ds ? colorOf('46') : colorOf('47'));
-    m._ghostHit = aid === 'arrow_ghost'; m._dpMul = aid === 'arrow_pierce' ? (ds ? 3 : 2.1) : 1; monsterNum(m, dmg, isCrit ? '#f1c40f' : skillCol, isCrit ? '45px' : '30px'); m._ghostHit = false; m._dpMul = 1;
-    const proc = (30 + ((global.HunPrStr || 0) + (global.HunPrAddStr || 0)) * 0.6) * HunCombat.defFactor(m.mdefHard), layers = ds ? 2 : 1;   // 二連矢觸發直接疊兩層
+    m._ghostHit = aid === 'arrow_ghost'; m._dpMul = aid === 'arrow_pierce' ? (ds ? 3 : 1.8) : 1; monsterNum(m, dmg, isCrit ? '#f1c40f' : skillCol, isCrit ? '45px' : '30px'); m._ghostHit = false; m._dpMul = 1;
+    const proc = (30 + ((global.HunPrStr || 0) + (global.HunPrAddStr || 0)) * 0.6) * HunCombat.defFactor(m.mdefHard), layers = ds ? 3 : 1;   // 二連矢觸發直接疊三層
     if (aid === 'arrow_fire' && Math.random() * 100 < proc) global.HunMonster.applyDot(m, 'fire', 6, layers);
     if (aid === 'arrow_rust' && Math.random() * 100 < proc) global.HunMonster.applyDot(m, 'poison', 6, layers);
-    let killed = global.HunMonster.damage(m, dmg, { dpMul: aid === 'arrow_pierce' ? (ds ? 3 : 2.1) : 1, ignoreDp: aid === 'arrow_ghost' });   // 破魔箭：DP 210 %（二連矢 300 %）
-    if (!killed && aid === 'arrow_pierce' && ds) {                                                         // 破魔 × 二連矢：額外對 HP 造成 ATK 15 %
-      const x = Math.floor(calcDamage(m, 15, false) * bufMul(cat));
-      m._ghostHit = true; monsterNum(m, x, '#ff9f43', '30px'); m._ghostHit = false; killed = global.HunMonster.damage(m, x, { ignoreDp: true });
-    }
+    let killed = global.HunMonster.damage(m, dmg, { dpMul: aid === 'arrow_pierce' ? (ds ? 3 : 1.8) : 1, ignoreDp: aid === 'arrow_ghost' });   // 破魔箭：DP 180 %（單體技能 300 %）
     if (!killed) global.HunMonster.knockback(m, knockDist(a, isCrit), isCrit);
     else killRoll(a.type === 'normal' ? 15 : 0.9);
     if (a.type === 'normal') craftRoll(0.09);
@@ -2812,7 +2808,7 @@ window.HunBuf = (function () {
     const h = m.hb || [30, 150, 30, 120];
     return a.x + 55 < m.x + h[1] && a.x + 100 > m.x + h[0] && cy >= m.y + h[2] - 15 && cy <= m.y + h[3] + 15;   // 箭矢 +15x +15y：判定區同步放大
   };
-  const PIERCE = { normal: { pass: [99, 33, 0], dmg: [100, 60, 30] }, ds2: { pass: [99, 0], dmg: [100, 60] }, rain: { pass: [66, 0], dmg: [100, 30] } };   // 二連矢／箭雨最多穿 2 隻
+  const PIERCE = { normal: { pass: [99, 33, 0], dmg: [100, 60, 30] }, ds2: { pass: [99, 0], dmg: [100, 60] } };   // 二連矢最多穿 2 隻；箭雨沒有穿透
   function findHit(a) {
     let best = null;
     for (const m of global.HunMonster.monsters) {
@@ -2827,27 +2823,27 @@ window.HunBuf = (function () {
     for (let i = arrows.length - 1; i >= 0; i--) {
       const a = arrows[i];
       if (a.type === 'charge') {
-        const phantom = a.arrowId === 'arrow_phantom', cap = phantom ? 9 : 3;      // 衝鋒箭基礎串 3 隻；穿刺箭矢再多串 6 隻（共 9）
+        const phantom = a.arrowId === 'arrow_phantom', per = phantom ? 60 : 90;      // 每串到一隻，擊退距離 −90（穿刺箭矢 −60）；距離用完就停，所以一般約 6~7 隻、穿刺箭矢最多 10 隻
+        const distNow = () => C.chargeDist - per * (a.targets ? a.targets.length : 0);
+        const pm = a.arrowId === 'arrow_pierce' ? 3 : 1;                               // 破魔箭矢：單體技能對 DP 300 %
+        const cx = a.arrowId === 'arrow_sharp' ? 15 : 0;                                // 銳利箭矢：單體技能額外 CRI + 15、C.Rate + 15
+        const cNum = (mm, v, c) => { mm._dpMul = pm; monsterNum(mm, v, c ? '#f1c40f' : colorOf('148'), c ? '45px' : '30px'); mm._dpMul = 1; };
+        const cHit = (mm, v) => global.HunMonster.damage(mm, v, { dpMul: pm });
         const touch = m => targetable(m) && !m.boss && (m.state === 'moving' || m.state === 'charge' || m.state === 'small_knockback' || m.state === 'falling') &&
           a.x < m.x + 150 && a.x + 213 > m.x + 30 && a.y + 10 < m.y + 120 && a.y + 74 > m.y + 30;
-        const pickable = t => targetable(t) && !t.boss && (t.state === 'moving' || t.state === 'charge' || t.state === 'small_knockback' || t.state === 'falling');
-        const forceSix = m0 => global.HunMonster.monsters.filter(t => t !== m0 && pickable(t))     // 穿刺箭矢：命中瞬間強制串起最近的 6 隻
-          .sort((p, q) => Math.abs(p.x - m0.x) - Math.abs(q.x - m0.x)).slice(0, 8).forEach((t, i) => {
-            t.state = 'pushed'; t.x = m0.x + 20 * (i + 1); t.y = m0.y; t.rot = 0;  t.el.classList.remove('hm-glow'); a.targets.push(t);
-          });
-        const grab = () => { global.HunMonster.monsters.forEach(m => { if (a.targets.length < cap && a.targets.indexOf(m) < 0 && touch(m)) { m.state = 'pushed'; m.y -= 15; a.targets.push(m); } }); };
+        const grab = () => { global.HunMonster.monsters.forEach(m => { if (a.pushed < distNow() && a.targets.indexOf(m) < 0 && touch(m)) { m.state = 'pushed'; m.y -= 15; a.targets.push(m); } }); };
         if (a.st === 'fly') {
           a.x -= a.speed * dt * 60; a.el.style.left = a.x + 'px';
           const m = global.HunMonster.monsters.find(touch);
           const bo = !m && global.HunMonster.monsters.find(t => t.boss && targetable(t) && a.x < t.x + 270 && a.x + 213 > t.x + 30 && a.y + 10 < t.y + 270 && a.y + 74 > t.y + 30);
           if (bo) {                                                          // 波利之王：免疫擊退，衝鋒箭命中一次造成傷害後消失
-            play('hit');
-            const dmg = Math.floor(calcDamage(bo, T.charge[rank['148']] * mul('148'), false) * bufMul('dmg_single'));
-            monsterNum(bo, dmg, colorOf('148'));
-            if (global.HunMonster.damage(bo, dmg)) killRoll(0.9);
+            const bc = rollCrit(bo, cx); play(bc ? 'crit' : 'hit');
+            const dmg = Math.floor(calcDamage(bo, T.charge[rank['148']] * mul('148'), bc, cx) * bufMul('dmg_single'));
+            cNum(bo, dmg, bc);
+            if (cHit(bo, dmg)) killRoll(0.9);
             drop(i); continue;
           }
-          if (m) { a.st = 'push'; a.targets = [m]; m.state = 'pushed'; m.y -= 15; a.y -= 15; a.el.style.top = a.y + 'px'; if (phantom) forceSix(m); }
+          if (m) { a.st = 'push'; a.targets = [m]; m.state = 'pushed'; m.y -= 15; a.y -= 15; a.el.style.top = a.y + 'px'; }
           else if (a.x < -100) drop(i);
         } else {
           a.targets = a.targets.filter(t => !t.dead);
@@ -2859,21 +2855,21 @@ window.HunBuf = (function () {
             t.x = Math.max(0, t.x - step);
             if (t.x <= 0 && !t.edge) {                                       // 插著怪物撞到左邊緣線：再造成 90 % 傷害
               t.edge = true;
-              const d = Math.floor(calcDamage(t, 90 * mul('148'), false) * bufMul('dmg_single'));
-              play('hit'); monsterNum(t, d, colorOf('148'));
-              if (global.HunMonster.damage(t, d)) killRoll(0.9);
+              const ec = rollCrit(t, cx), d = Math.floor(calcDamage(t, 90 * mul('148'), ec, cx) * bufMul('dmg_single'));
+              play(ec ? 'crit' : 'hit'); cNum(t, d, ec);
+              if (cHit(t, d)) killRoll(0.9);
             }
           });
-          if (a.pushed >= C.chargeDist) {
+          if (a.pushed >= distNow()) {
             a.targets.forEach(t => {
               t.edge = false;
               if (t.dead) return;
               t.y += 15; t.state = 'moving'; t.t = 0;
-              play('hit');
-              const dmg = Math.floor(calcDamage(t, T.charge[rank['148']] * mul('148'), false) * bufMul('dmg_single'));
-              monsterNum(t, dmg, colorOf('148'));
-              if (global.HunMonster.damage(t, dmg)) killRoll(0.9);
-              else global.HunMonster.knockback(t, 15 + (learned['44'] ? T.kb[rank['44']] : 0), false);
+              const fc = rollCrit(t, cx); play(fc ? 'crit' : 'hit');
+              const dmg = Math.floor(calcDamage(t, T.charge[rank['148']] * mul('148'), fc, cx) * bufMul('dmg_single'));
+              cNum(t, dmg, fc);
+              if (cHit(t, dmg)) killRoll(0.9);
+              else global.HunMonster.knockback(t, (fc ? 45 : 15) + (learned['44'] ? T.kb[rank['44']] : 0), fc);   // 帶一個普通攻擊的擊退：爆擊時更遠（45）
             });
             drop(i);
           }
@@ -2969,8 +2965,12 @@ window.HunBuf = (function () {
     const inBattle = !global.isInVillage;
     let pct = 0;
     if (conc.active && inBattle) pct = T.conc[rank['45']] * mul('45');
-    global.HunPrAddAgi = Math.floor((global.HunPrAgi || 0) * pct / 100);
-    global.HunPrAddDex = Math.floor((global.HunPrDex || 0) * pct / 100) +
+    const EA = global.HunPrEqAff || {};                                  // 裝備詞條加成
+    global.HunPrAddStr = EA.str || 0; global.HunPrAddVit = EA.vit || 0; global.HunPrAddInt = EA.int || 0; global.HunPrAddLuk = EA.luk || 0;
+    global.HunPrAddPow = EA.pow || 0; global.HunPrAddSta = EA.sta || 0; global.HunPrAddWis = EA.wis || 0;
+    global.HunPrAddSpl = EA.spl || 0; global.HunPrAddCon = EA.con || 0; global.HunPrAddCrt = EA.crt || 0;
+    global.HunPrAddAgi = Math.floor((global.HunPrAgi || 0) * pct / 100) + (EA.agi || 0);
+    global.HunPrAddDex = Math.floor((global.HunPrDex || 0) * pct / 100) + (EA.dex || 0) +
       (learned['43'] && inBattle ? Math.floor(T.dex[rank['43']] * mul('43')) : 0);
     global.HunPrHpRegenSpeed = HunBuf.val('hp_spd'); global.HunPrSpRegenSpeed = HunBuf.val('sp_spd');   // 100 % = 6 秒；200 % = 3 秒
     if (global.renderAllStats) global.renderAllStats();
@@ -3175,12 +3175,12 @@ window.HunBuf = (function () {
     let h = '';
     if (id === '46') h = row('造成傷害', vals([380, 1140, 3420], r) + ' %') + one('SP - 12');
     else if (id === '47') h = one('一次性發射 6 隻箭矢') + row('造成傷害', vals([250, 750, 2250], r) + ' %') + one('SP - 15') + one('CD 0.1');
-    else if (id === '148') h = one('擊退怪物 600 距離，最多串 3 隻') + row('造成傷害', vals([150, 450, 1350], r) + ' %') + one('詠唱 0.9 秒') + one('SP - 15');
+    else if (id === '148') h = one('擊退怪物 600 距離，每串到一隻 距離 - 90') + row('造成傷害', vals([150, 450, 1350], r) + ' %') + one('詠唱 0.9 秒') + one('SP - 15');
     else if (id === '45') h = row('Agi +', vals([12, 36, 108], r) + ' %') + row('Dex +', vals([12, 36, 108], r) + ' %') + one('持續 180 秒') + one('SP - 70');
     else if (id === '43') h = row('Dex +', vals([10, 30, 90], r));
     else if (id === '147') {
       const Y = '<span style="color:#ffd84d">' + (60 + ((global.HunPrStr || 0) + (global.HunPrAddStr || 0)) * 3) + '</span>';
-      h = one('在閒暇之餘時可製作箭矢') + one('規則') + one('獲得 神之金屬箭矢 x ' + Y) + one('選擇 1/2/3 種 特殊箭矢 x ' + Y);
+      h = one('在閒暇之餘時可製作箭矢') + one('規則') + one('獲得 神之金屬箭矢 x ' + Y) + row('選擇 ' + vals([1, 2, 3], r) + ' 種 特殊箭矢 x ' + Y);
     }
     else if (id === '44') h = row('擊退 +', vals([30, 60, 90], r)) + row('機率', vals([9, 9, 18], r) + ' %') + row('距離 +', vals([300, 450, 600], r));
     const p = P.plus[id];
@@ -3245,7 +3245,7 @@ window.HunBuf = (function () {
   let pending = 0, selecting = false;
   const RAR = HunColor.RANK;   // 1~5：白 / 藍 / 紫 / 橘 / 紅，+1 ~ +5   // 稀有度只用「面板顏色」表現，不顯示文字
   const BASEV = { '46': 'ds', '47': 'rain', '148': 'charge', '45': 'conc', '43': 'dex' };
-  const SKDESC = { '46': '連續射出兩支箭矢，對單一目標造成傷害', '47': '一次性發射 6 隻箭矢，每隻怪物只會被命中一次', '148': '擊退怪物 600 距離並造成傷害，最多串 3 隻；插著怪物撞到左邊緣線，再造成 90 % 傷害', '45': 'Agi、Dex 提升 180 秒', '43': 'Dex 增加' };
+  const SKDESC = { '46': '連續射出兩支箭矢，對單一目標造成傷害', '47': '一次性發射 6 隻箭矢，每隻怪物只會被命中一次', '148': '擊退怪物 600 距離並造成傷害，每串到一隻 距離 - 90；插著怪物撞到左邊緣線，再造成 90 % 傷害', '45': 'Agi、Dex 提升 180 秒', '43': 'Dex 增加' };
   const isBuf = id => id.indexOf('b:') === 0;
   const shade = (hex, f) => { const n = parseInt(hex.slice(1), 16); return 'rgb(' + Math.round((n >> 16) * f) + ',' + Math.round(((n >> 8) & 255) * f) + ',' + Math.round((n & 255) * f) + ')'; };
   const lite = (hex, f) => { const n = parseInt(hex.slice(1), 16), m = c => Math.round(c + (255 - c) * f); return 'rgb(' + m(n >> 16) + ',' + m((n >> 8) & 255) + ',' + m(n & 255) + ')'; };
@@ -4087,8 +4087,8 @@ window.HunBuf = (function () {
       document.getElementById('subAtkFlatYellow').textContent = window.HunPrFlatAtk;
       document.getElementById('subAtkFlatWhite').textContent = window.HunPrFlatAtk;
 
-      document.getElementById('statMAtkTotal').textContent = (totalStatMatk * 2);
-      document.getElementById('statMAtkDetail').textContent = totalStatMatk + ' + 0';
+      document.getElementById('statMAtkTotal').textContent = (totalStatMatk * 2 + (window.HunPrFlatMatk || 0));
+      document.getElementById('statMAtkDetail').textContent = totalStatMatk + ' + ' + (window.HunPrFlatMatk || 0);
       
       const pctOf = f => (Math.round((1 - f) * 1000) / 10) + ' %';     // 防禦係數 → 減傷 %
       document.getElementById('statDefTotal').textContent = pctOf(HunCombat.defFactor(window.playerHardDef));
@@ -4831,12 +4831,12 @@ window.HunBuf = (function () {
   const ARROW = {
     arrow_normal:  { name: '普通箭矢',     icon: IMG + 'HunArrow/Arrow1750.png', shoot: IMG + 'HunArrow/Arrow1750a.png', atk: 30, infinite: true },
     arrow_1765:    { name: '神之金屬箭矢', icon: IMG + 'HunArrow/Arrow1765.png', shoot: IMG + 'HunArrow/Arrow1765a.png', atk: 60 },
-    arrow_fire:    { name: '火箭矢',       icon: IMG + 'HunArrow/Arrow1752.png', shoot: IMG + 'HunArrow/Arrow1752a.png', atk: 15, desc: '30 + (Str × 0.6)% 機率造成[著火]\n持續 6 秒，每秒 (15 + Int × 0.15)% ATK 傷害（受 DP 吸收）\n無視物理防禦；觸發率 × 怪物 MDef 係數、每跳傷害 − 怪物 MDef、持續時間 × 怪物 MRes 係數\n可疊加層數；二連矢觸發時疊兩層' },
-    arrow_rust:    { name: '鐵鏽箭矢',     icon: IMG + 'HunArrow/Arrow1762.png', shoot: IMG + 'HunArrow/Arrow1762a.png', atk: 15, desc: '30 + (Str × 0.6)% 機率造成[中毒]\n持續 6 秒，每秒 目前HP (9 + Int × 0.09)% 傷害，無視 DP\n無視物理防禦；觸發率 × 怪物 MDef 係數、每跳傷害 − 怪物 MDef、持續時間 × 怪物 MRes 係數\n可疊加層數；二連矢觸發時疊兩層' },
-    arrow_sharp:   { name: '銳利箭矢',     icon: IMG + 'HunArrow/Arrow1764.png', shoot: IMG + 'HunArrow/Arrow1764a.png', atk: 15, desc: 'CRI + 30\nC.Rate + 15（爆擊傷害 %）\n二連矢額外 CRI + 15、C.Rate + 15' },
-    arrow_pierce:  { name: '破魔箭矢',     icon: IMG + 'HunArrow/Arrow1751.png', shoot: IMG + 'HunArrow/Arrow1751a.png', atk: 15, desc: '對 DP 造成 210 % 傷害（溢出 DP 的部分不套用）\n二連矢：對 DP 300 %，並額外對 HP 造成 ATK 15 % 傷害' },
+    arrow_fire:    { name: '火箭矢',       icon: IMG + 'HunArrow/Arrow1752.png', shoot: IMG + 'HunArrow/Arrow1752a.png', atk: 15, desc: '30 + (Str × 0.6)% 機率造成[著火]\n持續 6 秒，每秒 (15 + Int × 0.15)% ATK 傷害（受 DP 吸收）\n無視物理防禦；觸發率 × 怪物 MDef 係數、每跳傷害 − 怪物 MDef、持續時間 × 怪物 MRes 係數\n可疊加層數；二連矢觸發時疊三層' },
+    arrow_rust:    { name: '鐵鏽箭矢',     icon: IMG + 'HunArrow/Arrow1762.png', shoot: IMG + 'HunArrow/Arrow1762a.png', atk: 15, desc: '30 + (Str × 0.6)% 機率造成[中毒]\n持續 6 秒，每秒 目前HP (9 + Int × 0.09)% 傷害，無視 DP\n無視物理防禦；觸發率 × 怪物 MDef 係數、每跳傷害 − 怪物 MDef、持續時間 × 怪物 MRes 係數\n可疊加層數；二連矢觸發時疊三層' },
+    arrow_sharp:   { name: '銳利箭矢',     icon: IMG + 'HunArrow/Arrow1764.png', shoot: IMG + 'HunArrow/Arrow1764a.png', atk: 15, desc: 'CRI + 30\nC.Rate + 15（爆擊傷害 %）\n單體技能額外 CRI + 15、C.Rate + 15' },
+    arrow_pierce:  { name: '破魔箭矢',     icon: IMG + 'HunArrow/Arrow1751.png', shoot: IMG + 'HunArrow/Arrow1751a.png', atk: 15, desc: '對 DP 造成 180 % 傷害（溢出 DP 的部分不套用）\n單體技能（二連矢、衝鋒箭）：對 DP 300 %' },
     arrow_ghost:   { name: '無形箭矢',     icon: IMG + 'HunArrow/Arrow1757.png', shoot: IMG + 'HunArrow/Arrow1757a.png', atk: 15, desc: '無視 DP，直接對本體(HP)造成傷害' },
-    arrow_phantom: { name: '穿刺箭矢',     icon: IMG + 'HunArrow/Arrow1774.png', shoot: IMG + 'HunArrow/Arrow1774a.png', atk: 15, desc: '普攻 穿透率 99/33/0 %，傷害 100/60/30 %\n二連矢 穿透率 99/0 %，傷害 100/60 %\n箭雨 穿透率 66/0 %，傷害 100/30 %\n衝鋒箭 強制串起 9 隻（基礎 3 隻），傷害皆 100 %' }
+    arrow_phantom: { name: '穿刺箭矢',     icon: IMG + 'HunArrow/Arrow1774.png', shoot: IMG + 'HunArrow/Arrow1774a.png', atk: 15, desc: '普攻 穿透率 99/33/0 %，傷害 100/60/30 %\n二連矢 穿透率 99/0 %，傷害 100/60 %\n衝鋒箭 遞減距離減輕（-90 變 -60）' }
   };
   const POTION_CD = 9;
   const ITEM = {
@@ -4895,15 +4895,61 @@ window.HunBuf = (function () {
     if (t === 'consume') renderItemBar();
     return true;
   }
+  const overflow = [];                                          // 暫存區：背包滿格時排隊的新物品 [{t, ent}]
+  function addGear(ent) {
+    if (bag.equip.length >= BAG_MAX) { overflow.push({ t: 'equip', ent }); stashAdded(); return; }
+    bag.equip.push(ent);
+    if (bagOpen && tab === 'equip') renderBag();
+  }
   function addItem(id, n, force) {
     if (!force) { n = Math.min(n, Math.max(0, carryLimit(id) - carried(id))); if (n <= 0) return 0; }
     const t = tabOf(id), s = find(t, id);
-    if (s) s.count += n; else bag[t].push({ id, count: n });
+    if (s) s.count += n;
+    else if (t !== 'equip' && bag[t].length >= BAG_MAX) { overflow.push({ t, ent: { id, count: n } }); stashAdded(); return n; }   // 滿了：先放暫存區，不暫停遊戲
+    else bag[t].push({ id, count: n });
     if (bagOpen && tab === t) renderBag();
     if (t === 'arrow') updateArrowUI();
     if (t === 'consume') renderItemBar();
     return n;
   }
+
+  /* ================= 暫存區（垃圾桶上方）：背包滿了，新物品先排在這裡，不暫停遊戲 =================
+     只顯示最先得到的一件，其餘排隊；背包有空位就自動收進去，丟掉最前面那件就換下一件。死亡 / 回村 / 進戰場時還在暫存的就消失 */
+  const stashName = e => ITEM[e.id].name + (e.rank > 0 ? ' Rank.' + e.rank : '') + ((e.count || 1) > 1 ? ' x' + e.count : '');
+  const canAdd = (t, e) => (t !== 'equip' && !!find(t, e.id)) || bag[t].length < BAG_MAX;
+  function renderStash() {
+    const box = $('hi-stash'); if (!box) return;
+    const cur = overflow[0];
+    if (!cur) { box.style.display = 'none'; return; }
+    const x = cur.ent, st = ITEM[x.id].equip ? glowStyle(rankColor(x.rank || 0)) : '', cnt = (x.count || 1) > 1 ? '<span class="hi-cnt">' + x.count + '</span>' : '';
+    box.innerHTML = '<div id="hi-stash-slot" class="hi-slot filled" style="background-image:url(\'' + ITEM[x.id].icon + '\');' + st + '">' + cnt + (overflow.length > 1 ? '<span class="st-more">+' + (overflow.length - 1) + '</span>' : '') + '</div>';
+    box.style.display = 'block';
+    const sl = $('hi-stash-slot'); sl.addEventListener('pointerdown', e => { e.stopPropagation(); beginDrag(e, { kind: 'stash', tab: cur.t, id: x.id, el: sl, ent: x }); });
+  }
+  function stashAdded() {
+    const x = overflow[overflow.length - 1];
+    log('背包已滿，' + stashName(x.ent) + ' 先放進暫存區', '#ff8a80'); renderStash();
+  }
+  function flushStash() {                                      // 背包有空位的物品自動收進背包
+    let moved = false;
+    for (let i = 0; i < overflow.length;) {
+      const t = overflow[i].t, e = overflow[i].ent;
+      if (!canAdd(t, e)) { i++; continue; }
+      const s2 = t !== 'equip' ? find(t, e.id) : null;
+      if (s2) s2.count += e.count; else bag[t].push(e);
+      overflow.splice(i, 1); moved = true;
+      log('進入背包：' + stashName(e), '#2ecc71');
+      if (t === 'arrow') updateArrowUI(); if (t === 'consume') renderItemBar();
+    }
+    if (moved) { if (bagOpen) renderBag(); if (global.HunSave) global.HunSave.save(true); }
+    if (moved || overflow.length) renderStash();
+  }
+  function discardStash() {
+    const cur = overflow.shift(); if (!cur) return hideDesc();
+    log('丟棄：' + stashName(cur.ent), '#ff8a80');
+    hideDesc(); flushStash(); renderStash();
+  }
+  function stashClear() { if (overflow.length) { overflow.length = 0; renderStash(); } }
 
   /* ================= 數值回寫 ================= */
   /* 裝備等級：武器 Lv1~5、防具 Lv1~3；等級影響「精煉加成數值」「安全精煉值」「超過安全值的成功率」「過度精煉隨機加成」 */
@@ -4918,6 +4964,40 @@ window.HunBuf = (function () {
   };
   const rolls = { weapon: [] };                        // 武器每一級精煉的過度精煉隨機加成（失敗降級時一併退掉）
   const lvOf = s => { const it = equipped[s] && ITEM[equipped[s]]; return (it && it.lv) || 1; };
+  /* 裝備階級（Rank）：0 = 無階級（灰色）；1~5 = 白/藍/紫/橘/紅，6 = 動態彩色（跟技能階級同一組顏色） */
+  const GRAY = '#9e9e9e';
+  const rankColor = r => (r > 0 ? global.HunColor.get(r) : GRAY);
+  const glowStyle = c => 'border-color:' + c + ';box-shadow:0 0 14px ' + c + ',0 0 6px ' + c + ',inset 0 0 12px ' + c + ';';
+  /* 裝備個體：掉落 / 賦能的裝備每件都有自己的 Rank 與詞條（背包裡的格子 = {id, count:1, rank, aff:[{k, v}]}）
+     穿在身上的個體資料放 eqInst[部位]；沒有資料 = 初始裝備（無階級、灰色） */
+  const eqInst = {};
+  const instOf = s => eqInst[s] || { rank: 0, aff: [] };
+  const GEAR_SLOT_ID = { weapon: 'bow_700000', head: 'c_head', cape: 'c_cape', accessoryL: 'c_necklace', accessoryR: 'c_gloves', armor: 'c_armor', boots: 'c_boots' };
+  const GEAR_SLOTS = Object.keys(GEAR_SLOT_ID);
+  /* 詞條池：[key, 名稱, 單位]；數值 = 裝備 Rank × (1~3) */
+  const AFF = [['str', 'STR', ''], ['agi', 'AGI', ''], ['vit', 'VIT', ''], ['int', 'INT', ''], ['dex', 'DEX', ''], ['luk', 'LUK', ''],
+    ['pow', 'POW', ''], ['sta', 'STA', ''], ['wis', 'WIS', ''], ['spl', 'SPL', ''], ['con', 'CON', ''], ['crt', 'CRT', ''],
+    ['atk', 'ATK & MATK', ''], ['aspd', '攻擊速度', ' %'], ['cri', 'CRI', ''], ['race', '全種族傷害', ' %'], ['size', '全體型傷害', ' %'], ['elem', '全屬性傷害', ' %'], ['range', '遠程傷害', ' %']];
+  const AFF_BY = {}; AFF.forEach(a => { AFF_BY[a[0]] = a; });
+  const affText = a => { const d = AFF_BY[a.k]; return d ? d[1] + ' + ' + a.v + d[2] : '？'; };
+  const rr = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const affixCount = r => 1;                                   // Rank.1 = 1 條詞條（之後高階再增加）
+  const pickType = used => { const pool = AFF.filter(a => used.indexOf(a[0]) < 0); return pool[Math.floor(Math.random() * pool.length)][0]; };
+  const rollValue = rank => rank * rr(1, 3);
+  function rollAffixes(rank, n) { const L = [], used = []; for (let i = 0; i < n; i++) { const k = pickType(used); used.push(k); L.push({ k, v: rollValue(rank) }); } return L; }
+  const makeGear = (id, rank) => ({ id, count: 1, rank, aff: rollAffixes(rank, affixCount(rank)) });
+  /* 賦能（洗詞條）：locks[i] = {t: 鎖種類, v: 鎖數值}；沒鎖的部分全部重抽 */
+  function rerollAff(rank, aff, locks) {
+    const used = aff.map((a, i) => (locks[i] && locks[i].t ? a.k : null)).filter(Boolean);
+    return aff.map((a, i) => {
+      const lk = locks[i] || {};
+      const k = lk.t ? a.k : (() => { const n = pickType(used); used.push(n); return n; })();
+      return { k, v: lk.v ? a.v : rollValue(rank) };
+    });
+  }
+  /* 背包格數：每個分類 15 格（5×3），滿了向左一次加 1 欄（3 格），最多 10×3 = 30 格；再滿就暫停遊戲要玩家丟棄 */
+  const BAG_MIN = 15, BAG_MAX = 30;
+  const bagCols = t => { const n = (bag[t] || []).length; return n <= BAG_MIN ? 5 : Math.min(10, 5 + Math.ceil((n - BAG_MIN) / 3)); };
   const baseRefineDef = r => { let d = 0; for (let i = 1; i <= r; i++) d += Math.floor((i - 1) / 4) + 1; return d; };
   function equipDef() {
     let d = 0;
@@ -4940,10 +5020,15 @@ window.HunBuf = (function () {
     ['head', 'cape', 'armor', 'boots'].forEach(s => { if (equipped[s] && lvOf(s) >= 2) { global.HunPrEquipRes += (refine[s] || 0) * 2; global.HunPrEquipMRes += (refine[s] || 0) * 2; } });
     global.HunPrRefineAtk = (refine.weapon || 0) * (RULE.wAtk[lvOf('weapon')] || 2) + rolls.weapon.slice(0, refine.weapon || 0).reduce((a, b) => a + b, 0);
     global.HunPrArrowAtk = ARROW[curArrow].atk;
-    global.HunPrCriAdd = curArrow === 'arrow_sharp' ? 30 : 0; global.HunPrCRateAdd = curArrow === 'arrow_sharp' ? 15 : 0;
+    const AT = {}; GEAR_SLOTS.forEach(sl => { if (equipped[sl]) instOf(sl).aff.forEach(a => { AT[a.k] = (AT[a.k] || 0) + a.v; }); });   // 穿戴中的詞條加總
+    global.HunPrEqAff = AT;
+    global.HunPrFlatAtk = AT.atk || 0; global.HunPrFlatMatk = AT.atk || 0;
+    global.HunPrDmgAff = (1 + (AT.race || 0) / 100) * (1 + (AT.size || 0) / 100) * (1 + (AT.elem || 0) / 100) * (1 + (AT.range || 0) / 100);
+    global.HunPrCriAdd = (curArrow === 'arrow_sharp' ? 30 : 0) + (AT.cri || 0); global.HunPrCRateAdd = curArrow === 'arrow_sharp' ? 15 : 0;
     global.HunPrEquipDef = equipDef();
-    global.HunPrAspdBuff = buffList.reduce((m, b) => Math.max(m, b.aspd || 0), 0);
-    if (global.renderAllStats) global.renderAllStats();
+    global.HunPrAspdBuff = buffList.reduce((m, b) => Math.max(m, b.aspd || 0), 0) + (AT.aspd || 0) / 100;
+    if (global.HunPlayer && global.HunPlayer.recompute) global.HunPlayer.recompute();      // 重算素質（含詞條）並重畫
+    else if (global.renderAllStats) global.renderAllStats();
   }
 
   /* ================= 箭矢 ================= */
@@ -5042,13 +5127,19 @@ window.HunBuf = (function () {
   const buffs = () => buffList.map(b => ({ id: b.id, name: b.name, icon: b.icon, left: Math.max(0, Math.ceil(b.left)) }));
   function resetBattle() {
     cd.hp = cd.sp = 0; hot.hp.left = hot.hp.remain = hot.sp.left = hot.sp.remain = 0; buffList = [];
+    stashClear();
     recalc(); renderCd();
   }
 
   /* ================= 擊殺：Zeny 與掉落 ================= */
-  function dropFx(x, y, icon, groundY, id) {
+  function dropFx(x, y, icon, groundY, id, glow) {
     const el = document.createElement('div'); el.className = 'hi-drop';
+    if (glow) el.style.filter = 'drop-shadow(0 0 8px ' + glow + ') drop-shadow(0 0 5px ' + glow + ')';       // 裝備：階級色光
     if (/^c_refine_.*_normal$/.test(id || '')) el.style.filter = 'drop-shadow(0 0 8px #3aa0ff) drop-shadow(0 0 5px #3aa0ff)';     // 基礎精煉素材：藍光
+    if (glow) {                                                                                                  // 裝備：掉落圖放大成 60 並加一圈護盾式光圈
+      el.style.width = el.style.height = '60px'; x -= 7.5; y -= 7.5;
+      const ring = document.createElement('div'); ring.className = 'hi-ring'; ring.style.borderColor = glow; ring.style.boxShadow = '0 0 14px ' + glow + ',inset 0 0 14px ' + glow; el.appendChild(ring);
+    }
     el.style.backgroundImage = "url('" + icon + "')"; el.style.left = x + 'px'; el.style.top = y + 'px'; stage.appendChild(el);
     requestAnimationFrame(() => { el.style.transition = 'top .9s ease-in'; el.style.top = groundY + 'px'; });
     setTimeout(() => {
@@ -5072,11 +5163,20 @@ window.HunBuf = (function () {
     if (m.boss) {                                  // 波利之王：R = Lv×Lv×Rank；一般掉落 R÷3、基礎精煉 R÷6、濃縮精煉 R÷6÷15；皆分開判定，超過 100 % 多出的部分當作再掉一個的機率
       const R = lv * lv * rank;
       const give = (id, n) => { if (n <= 0) return; addItem(id, n, true); log('獲得：' + ITEM[id].name + ' x' + n, '#ffd84d'); dropFx(m.x + 120 + Math.random() * 100, m.y + 150 + Math.random() * 60, ITEM[id].icon, m.y + 250, id); };
-      ['c_refine_weapon_normal', 'c_refine_armor_normal'].forEach(id => give(id, roll(R / 6)));
-      ['c_refine_weapon_conc', 'c_refine_armor_conc'].forEach(id => give(id, roll(R / 6 / 15)));      // 濃縮精煉素材（+1~+10）
+      ['c_refine_weapon_normal', 'c_refine_armor_normal'].forEach(id => give(id, roll(R / 3)));
+      ['c_refine_weapon_conc', 'c_refine_armor_conc'].forEach(id => give(id, roll(R / 3 / 15)));      // 濃縮精煉素材（+1~+10）
+    }
+    {                                              // 打寶：先抽有沒有掉（小怪 = 一般掉落機率 ÷ 9，波利之王 = 小怪的 9 倍）→ 再抽部位 → 再抽詞條；目前只掉 Rank.1
+      const gn = roll(m.boss ? rate : rate / 9), bx = m.boss ? 120 : 60, by = m.boss ? 150 : 60, gy = m.boss ? 250 : 100;
+      for (let g = 0; g < gn; g++) {
+        const gs = GEAR_SLOTS[Math.floor(Math.random() * GEAR_SLOTS.length)], gid = GEAR_SLOT_ID[gs], ent = makeGear(gid, 1);
+        addGear(ent);
+        log('獲得裝備：' + ITEM[gid].name + ' Rank.1 [' + ent.aff.map(affText).join(' / ') + ']', rankColor(1));
+        dropFx(m.x + bx + Math.random() * 60, m.y + by + Math.random() * 30, ITEM[gid].icon, m.y + gy, gid, rankColor(1));
+      }
     }
     DROPS.forEach(d => {
-      const n = roll(m.boss ? lv * lv * rank / 3 : rate);
+      const n = roll(m.boss ? lv * lv * rank : rate);
       if (n <= 0) return;
       addItem(d[0], n);
       log('獲得：' + d[1] + ' x' + n, '#5bc0de');
@@ -5089,12 +5189,22 @@ window.HunBuf = (function () {
     rate = rate == null ? 0.7 : rate;
     const wh = global.HunVillage && global.HunVillage.wh; if (!wh) return;
     let kept = 0, lost = 0;
+    stashClear();                                             // 死亡：還在暫存區的就沒了
+    if (bag.equip.length) {                                   // 裝備：照件數算（−30 %，無條件捨去剩幾件），隨機留下其中幾件
+      const list = bag.equip.slice(); for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const tmp = list[i]; list[i] = list[j]; list[j] = tmp; }
+      const keep = Math.floor(list.length * rate);
+      list.slice(0, keep).forEach(x => wh.equip.push(x)); kept += keep; lost += list.length - keep; bag.equip = [];
+    }
     Object.keys(bag).forEach(t => {
       bag[t] = bag[t].filter(st => {
         if (t === 'arrow') { if (st.id === 'arrow_normal') return true; lost += st.count; return false; }
         if (t === 'consume') { lost += st.count; return false; }                      // 補品（藥水等）無法帶回，只有貴重物能帶回村莊
         const k = Math.floor(st.count * rate); lost += st.count - k;
-        if (k > 0) { const d = wh[t].find(x => x.id === st.id); if (d) d.count += k; else wh[t].push({ id: st.id, count: k }); kept += k; }
+        if (k > 0) {
+          if (t === 'equip') wh[t].push(Object.assign({}, st, { count: k }));        // 裝備個體各自獨立，不能疊在一起
+          else { const d = wh[t].find(x => x.id === st.id); if (d) d.count += k; else wh[t].push({ id: st.id, count: k }); }
+          kept += k;
+        }
         return false;
       });
     });
@@ -5105,21 +5215,43 @@ window.HunBuf = (function () {
   const updateZeny = () => { const z = $('hi-zeny'); if (z) z.textContent = global.HunPrZeny; };
 
   /* ================= 裝備 ================= */
-  function equipFromBag(id) {
-    const it = ITEM[id]; if (!it || !it.equip) return;
-    const i = bag.equip.findIndex(x => x.id === id); if (i < 0) return;
+  /* ================= 垃圾桶：背包右邊，拖進去或點物品選「丟棄」都可以（丟之前會再確認一次） ================= */
+  function discardAsk(t, ent, anchor) {
+    if (!ent) return;
+    if (ent.id === 'arrow_normal') { hideDesc(); return log('普通箭矢無法丟棄', '#ff8a80'); }
+    const n = ent.count || 1;
+    showDesc(ent.id, anchor, [[n > 1 ? '丟棄全部 x' + n : '確定丟棄', 'red', () => discard(t, ent)], ['取消', 'gray', hideDesc]], ent);
+  }
+  function discard(t, ent) {
+    const i = bag[t].indexOf(ent); if (i < 0) return hideDesc();
+    bag[t].splice(i, 1);
+    log('丟棄：' + ITEM[ent.id].name + (ent.rank > 0 ? ' Rank.' + ent.rank : '') + ((ent.count || 1) > 1 ? ' x' + ent.count : ''), '#ff8a80');
+    if (t === 'arrow' && ent.id === curArrow) { curArrow = 'arrow_normal'; recalc(); }
+    hotkeys.forEach((h, k) => { if (h && !find(tabOf(h), h)) hotkeys[k] = null; });
+    hideDesc(); updateArrowUI(); renderItemBar(); if (bagOpen) renderBag(); if (equipOpen) renderCards();
+    if (global.HunVillage && global.HunVillage.onTab) global.HunVillage.onTab();
+    flushStash();
+    if (global.HunSave) global.HunSave.save(true);
+  }
+  function equipFromBag(ent) {
+    const it = ent && ITEM[ent.id]; if (!it || !it.equip) return;
+    const i = bag.equip.indexOf(ent); if (i < 0) return;
     bag.equip.splice(i, 1);
-    const old = equipped[it.slot]; if (old) bag.equip.push({ id: old, count: 1 });
-    equipped[it.slot] = id; recalc(); renderCards(); renderBag(); hideDesc();
+    const old = equipped[it.slot];
+    if (old) { const oi = instOf(it.slot); bag.equip.push({ id: old, count: 1, rank: oi.rank, aff: oi.aff }); }      // 換下來的裝備連階級、詞條一起回背包
+    equipped[it.slot] = ent.id;
+    if ((ent.rank || 0) > 0) eqInst[it.slot] = { rank: ent.rank, aff: (ent.aff || []).map(a => ({ k: a.k, v: a.v })) }; else delete eqInst[it.slot];
+    recalc(); renderCards(); renderBag(); hideDesc();
     log('裝備了 ' + it.name, '#2ecc71');
     if (global.HunSave) global.HunSave.save(true);
   }
 
   /* ================= 說明 ================= */
-  function descLines(id) {
+  function descLines(id, inst) {
     const it = ITEM[id], L = [];
     if (it.equip) {
       L.push('部位：' + SLOT_NAME[it.slot]);
+      if (inst && inst.rank > 0) { L.push('<span style="color:' + rankColor(inst.rank) + '">Rank.' + inst.rank + '</span>'); (inst.aff || []).forEach(a => L.push('<span style="color:#ffd84d">' + affText(a) + '</span>')); }
       if (it.def) L.push('防禦 + ' + it.def);
       if (it.atk) L.push('裝備ATK + ' + it.atk);
       const h = hunC[it.slot] || 0;
@@ -5133,7 +5265,7 @@ window.HunBuf = (function () {
           fire ? '每秒 ' + y(global.HunPrFirePct || 15) + ' % 傷害' : '每秒 ' + y(global.HunPrPoisonPct || 9) + ' % 目前HP 傷害',
           fire ? '15 + (Int x 0.15)' : '9 + (Int x 0.09)');
         if (!fire) L.push('無視 DP');
-        L.push('可疊加', '(二連矢觸發時兩層)');
+        L.push('可疊加', '(二連矢觸發時三層)');
       } else {
         L.push('部位：箭矢', '箭矢ATK + ' + ARROW[id].atk); if (ARROW[id].desc) L.push(ARROW[id].desc);
       }
@@ -5147,10 +5279,10 @@ window.HunBuf = (function () {
     return L;
   }
   function hideDesc() { $('hi-desc').style.display = 'none'; $('hi-act').style.display = 'none'; }
-  function showDesc(id, anchor, actions) {
+  function showDesc(id, anchor, actions, inst) {
     const it = ITEM[id]; if (!it) return;
     const d = $('hi-desc');
-    d.innerHTML = '<div class="hi-d-title">' + it.name + '</div><div class="hi-d-body">' + descLines(id).join('\n') + '</div>'; d.style.display = 'flex';
+    d.innerHTML = '<div class="hi-d-title"' + (it.equip ? ' style="color:' + rankColor((inst && inst.rank) || 0) + '"' : '') + '>' + it.name + '</div><div class="hi-d-body">' + descLines(id, inst).join('\n') + '</div>'; d.style.display = 'flex';
     const a = $('hi-act'); a.innerHTML = '';
     if (!actions || !actions.length) { a.style.display = 'none'; return; }
     actions.forEach(x => {
@@ -5168,13 +5300,16 @@ window.HunBuf = (function () {
   function renderBag() {
     $('hi-tabs').querySelectorAll('.hi-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
     const grid = $('hi-grid'); grid.innerHTML = '';
-    for (let i = 0; i < 15; i++) {
+    const cols = bagCols(tab);                                  // 15 格滿了向左延展（每次 +1 欄 = 3 格），最多 10 欄
+    grid.style.gridTemplateColumns = 'repeat(' + cols + ',90px)'; $('hi-bag').style.left = (965 - (cols - 5) * 105) + 'px';
+    for (let i = 0; i < cols * 3; i++) {
       const it = bag[tab][i], el = document.createElement('div'); el.className = 'hi-slot';
       if (it && ITEM[it.id]) {
         el.classList.add('filled'); el.style.backgroundImage = "url('" + ITEM[it.id].icon + "')";
+        if (ITEM[it.id].equip) el.style.cssText += glowStyle(rankColor(it.rank || 0));
         const txt = (ARROW[it.id] && ARROW[it.id].infinite) ? '∞' : (it.count > 1 ? it.count : '');
         if (txt !== '') el.innerHTML = '<span class="hi-cnt">' + txt + '</span>';
-        el.addEventListener('pointerdown', e => { e.stopPropagation(); beginDrag(e, { kind: 'bag', tab, id: it.id, el }); });
+        el.addEventListener('pointerdown', e => { e.stopPropagation(); beginDrag(e, { kind: 'bag', tab, id: it.id, el, ent: it }); });
       }
       grid.appendChild(el);
     }
@@ -5184,16 +5319,18 @@ window.HunBuf = (function () {
     SLOTS.forEach(sd => {
       const slot = sd[0], isArrow = slot === 'arrow', id = isArrow ? curArrow : equipped[slot];
       const card = document.createElement('div'); card.className = 'hi-card' + (id ? ' filled' : '');
+      const isEq = !!id && !isArrow, rc = isEq ? rankColor(instOf(slot).rank) : '';   // 裝備才有階級顏色；箭矢維持原樣
+      if (isEq) card.style.borderColor = rc;
       card.innerHTML = '<span class="hi-c-lab">' + sd[1] + '</span>' +
         (REFINE_SLOTS.indexOf(slot) >= 0 ? '<span class="hi-c-ref">+' + (refine[slot] || 0) + '</span>' : '') +
-        '<div class="hi-c-icon" style="' + (id ? "background-image:url('" + ITEM[id].icon + "');border-style:solid" : '') + '"></div>' +
+        '<div class="hi-c-icon" style="' + (id ? "background-image:url('" + ITEM[id].icon + "');border-style:solid;" + (isEq ? glowStyle(rc) : '') : '') + '"></div>' +
         (hunC[slot] > 0 ? '<span class="hi-c-tier">HunC.Lv' + hunC[slot] + '</span>' : '') +
-        '<span class="hi-c-name">' + (id ? ITEM[id].name : '無') + '</span>';
+        '<span class="hi-c-name"' + (isEq ? ' style="color:' + rc + '"' : '') + '>' + (id ? ITEM[id].name : '無') + '</span>';
       card.addEventListener('click', e => {
         e.stopPropagation();
         if (!id) return hideDesc();
         if (isArrow) return showDesc(id, card, []);
-        showDesc(id, card, []);
+        showDesc(id, card, [], instOf(slot));
       });
       g.appendChild(card);
     });
@@ -5220,11 +5357,11 @@ window.HunBuf = (function () {
   }
 
   /* ================= 面板開關 ================= */
-  function openBag(t) { bagOpen = true; if (t) tab = t; $('hi-bag').style.display = 'block'; renderBag(); }
+  function openBag(t) { bagOpen = true; if (t) tab = t; $('hi-bag').style.display = 'block'; $('hi-trash').style.display = 'block'; renderBag(); }
   function openEquip() { closePanels(); equipOpen = true; $('hi-equip').style.display = 'block'; renderCards(); openBag('equip'); }
   function openBagOnly() { closePanels(); openBag('consume'); }
   function closePanels() {
-    bagOpen = equipOpen = false; $('hi-bag').style.display = 'none'; $('hi-equip').style.display = 'none'; hideDesc(); closeArrowPop();
+    bagOpen = equipOpen = false; $('hi-bag').style.display = 'none'; $('hi-trash').style.display = 'none'; $('hi-equip').style.display = 'none'; hideDesc(); closeArrowPop();
     if (global.HunVillage && global.HunVillage.hide) global.HunVillage.hide();
   }
 
@@ -5238,12 +5375,13 @@ window.HunBuf = (function () {
     if (!drag) return;
     if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) >= 20) {
       drag.moved = true;
-      const draggable = drag.kind === 'hot' || (drag.kind === 'bag' && (drag.tab === 'consume' || drag.tab === 'arrow'));
+      const draggable = drag.kind === 'hot' || drag.kind === 'bag' || drag.kind === 'stash';      // 背包裡所有物品都能拖（拖到垃圾桶丟棄）
       if (draggable) {
         const g = document.createElement('div'); g.className = 'drag-ghost'; g.style.backgroundImage = "url('" + ITEM[drag.id].icon + "')";
         document.body.appendChild(g); drag.ghost = g;
-        if (!(drag.kind === 'bag' && drag.tab === 'arrow')) $('hotkey-bar-item').querySelectorAll('.hotkey-slot:not(.filled)').forEach(s => s.classList.add('drop-ok'));
-        else $('hi-arrow').classList.add('drop-ok');
+        if (drag.kind === 'bag' && drag.tab === 'arrow') $('hi-arrow').classList.add('drop-ok');
+        else if (drag.kind === 'hot' || drag.tab === 'consume') $('hotkey-bar-item').querySelectorAll('.hotkey-slot:not(.filled)').forEach(s => s.classList.add('drop-ok'));
+        if (drag.kind === 'bag' || drag.kind === 'stash') $('hi-trash-slot').classList.add('drop-ok');
       }
     }
     if (drag.ghost) { drag.ghost.style.left = e.clientX + 'px'; drag.ghost.style.top = e.clientY + 'px'; }
@@ -5255,15 +5393,19 @@ window.HunBuf = (function () {
     if (d.ghost) d.ghost.remove();
     document.querySelectorAll('.drop-ok').forEach(s => s.classList.remove('drop-ok'));
     if (!d.moved) {
+      if (d.kind === 'stash') return showDesc(d.id, d.el, [['丟棄', 'red', discardStash], ['取消', 'gray', hideDesc]], d.ent);   // 暫存區：點一下看內容，可丟棄
       if (d.kind === 'hot') return void usePotion(d.id);
-      if (d.kind === 'bag' && global.HunVillage && global.HunVillage.whOpen && global.HunVillage.whOpen()) return global.HunVillage.bagClick(d.tab, d.id, d.el);
+      if (d.kind === 'bag' && global.HunVillage && global.HunVillage.whOpen && global.HunVillage.whOpen()) return global.HunVillage.bagClick(d.tab, d.id, d.el, d.ent);
       const it = ITEM[d.id], acts = [];
       if (d.tab === 'consume' && it.potion) acts.push(['使用', 'green', () => { usePotion(d.id); hideDesc(); }]);
-      if (d.tab === 'equip') acts.push(['裝備', 'blue', () => equipFromBag(d.id)]);
+      if (d.tab === 'equip') acts.push(['裝備', 'blue', () => equipFromBag(d.ent)]);
       if (d.tab === 'arrow') acts.push(['裝備', 'blue', () => setArrow(d.id)]);
-      return showDesc(d.id, d.el, acts);
+      acts.push(['丟棄', 'red', () => discardAsk(d.tab, d.ent, d.el)]);
+      return showDesc(d.id, d.el, acts, d.ent);
     }
     justDragged = true; setTimeout(() => { justDragged = false; }, 60);
+    if (d.kind === 'stash') { if ($('hi-trash').style.display === 'block' && over($('hi-trash'), e, 10)) showDesc(d.id, $('hi-trash-slot'), [['丟棄', 'red', discardStash], ['取消', 'gray', hideDesc]], d.ent); return; }
+    if (d.kind === 'bag' && over($('hi-trash'), e, 10)) return discardAsk(d.tab, d.ent, $('hi-trash-slot'));    // 拖進垃圾桶：丟棄（會再確認）
     if (d.kind === 'bag' && d.tab === 'arrow') { if (over($('hi-arrow'), e, 10)) setArrow(d.id); return; }
     const slots = Array.from($('hotkey-bar-item').querySelectorAll('.hotkey-slot'));
     const t = slots.findIndex(s => over(s, e, 10));
@@ -5307,7 +5449,10 @@ window.HunBuf = (function () {
   #hi-act{position:absolute;display:none;gap:6px;z-index:41;padding:6px;border-radius:9px;background:rgba(15,15,15,.96);border:3px solid #ff7f9f;pointer-events:auto}
   .hi-btn{padding:6px 18px;border-radius:6px;border:none;color:#fff;font:inherit;cursor:pointer;white-space:nowrap}
   .hi-btn.blue{background:rgba(52,152,219,.9)}.hi-btn.green{background:rgba(46,204,113,.9)}.hi-btn.red{background:rgba(231,76,60,.9)}.hi-btn.gray{background:rgba(100,100,100,.9)}
-  .hi-btn:active{filter:brightness(.85)}
+  .hi-btn:active{filter:brightness(.85)}.hi-btn:disabled{opacity:.35;cursor:default;pointer-events:none}
+  #hi-stash{left:1519px;bottom:236px;z-index:29;padding:15px}
+  #hi-stash-slot{border-color:#ffd84d;border-style:dashed;opacity:1;cursor:pointer}
+  #hi-stash .st-more{position:absolute;left:3px;top:0;font-size:30px;color:#ffd84d;pointer-events:none;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
   #hi-arrow{position:absolute;left:1815px;top:678px;width:90px;height:90px;z-index:20;border-radius:9px;border:3px solid #fff;background:rgba(15,15,15,.75);cursor:pointer;pointer-events:auto}
   @property --hiA{syntax:'<angle>';inherits:false;initial-value:0deg}
   @keyframes hiSpin{to{--hiA:360deg}}
@@ -5316,7 +5461,12 @@ window.HunBuf = (function () {
   #hi-arrow-pop{position:absolute;left:1815px;bottom:412px;width:90px;display:none;flex-direction:column-reverse;gap:5px;z-index:25;padding:10px;border-radius:9px;background:rgba(15,15,15,.92);border:3px solid #ff7f9f}
   .hi-pop-item{position:relative;width:64px;height:64px;border:3px dashed rgba(255,255,255,.5);border-radius:6px;background-size:contain;background-repeat:no-repeat;background-position:center;cursor:pointer}
   .hi-cd{position:absolute;inset:0;border-radius:9px;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;pointer-events:none;z-index:6}
-  .hi-drop{position:absolute;width:45px;height:45px;background-size:contain;background-repeat:no-repeat;background-position:center;z-index:40;pointer-events:none;filter:drop-shadow(0 0 8px #fff)}`;
+  .hi-drop{position:absolute;width:45px;height:45px;background-size:contain;background-repeat:no-repeat;background-position:center;z-index:40;pointer-events:none;filter:drop-shadow(0 0 8px #fff)}
+  .hi-ring{position:absolute;inset:-14px;border-radius:50%;border:3px solid #fff;pointer-events:none;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.4),rgba(255,255,255,.1) 55%,rgba(255,255,255,.02) 72%);animation:hiRing 1s ease-in-out infinite}
+  @keyframes hiRing{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
+  #hi-trash{left:1519px;bottom:102px;z-index:29;padding:15px}
+  #hi-trash-slot{width:90px;height:90px;box-sizing:border-box;border-radius:9px;border:3px dashed #ff8a80;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:54px;cursor:pointer;touch-action:none}
+  #hi-trash-slot.drop-ok{border-style:solid;border-color:#ff7f9f;box-shadow:0 0 12px #ff7f9f;background:rgba(255,127,159,.25)}`;
 
   function build() {
     const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
@@ -5325,7 +5475,9 @@ window.HunBuf = (function () {
       '<div id="hi-arrow"><div id="hi-arrow-icon"></div><span id="hi-arrow-cnt" class="hi-cnt"></span></div><div id="hi-arrow-pop"></div>' +
       '<div id="hi-equip" class="hi-panel"><div class="hi-title">裝備資訊</div><div class="hi-line"></div><div id="hi-cards"></div></div>' +
       '<div id="hi-bag" class="hi-panel"><div id="hi-tabs"></div><div id="hi-grid"></div></div>' +
-      '<div id="hi-desc"></div><div id="hi-act"></div>');
+      '<div id="hi-trash" class="hi-panel"><div id="hi-trash-slot">🗑️</div></div><div id="hi-desc"></div><div id="hi-act"></div><div id="hi-stash" class="hi-panel"></div>');
+    $('hi-trash').addEventListener('click', e => { e.stopPropagation(); log('把背包物品拖到垃圾桶，或點物品選「丟棄」', '#ffffff'); });
+    setInterval(() => { if (overflow.length) flushStash(); }, 300);     // 背包有空位就自動把暫存區物品收進去
     $('ui-12').innerHTML = '<span>Zeny：</span><span id="hi-zeny">0</span>';
     TABS.forEach(t => {
       const b = document.createElement('div'); b.className = 'hi-tab'; b.dataset.tab = t[0]; b.textContent = t[1];
@@ -5336,14 +5488,15 @@ window.HunBuf = (function () {
       if (justDragged) return;
       const t = e.target;
       if (popOpen && !t.closest('#hi-arrow, #hi-arrow-pop')) closeArrowPop();
-      if (!t.closest('#hi-desc, #hi-act, #hi-bag, #hi-equip, #hi-arrow, #hi-arrow-pop, #ui-9, .hotkey-slot, #hv-wh, #hv-mid, #hv-rf')) { hideDesc(); if (bagOpen || equipOpen) closePanels(); }
+      if (!t.closest('#hi-trash, #hi-stash, #hi-desc, #hi-act, #hi-bag, #hi-equip, #hi-arrow, #hi-arrow-pop, #ui-9, .hotkey-slot, #hv-wh, #hv-mid, #hv-rf')) { hideDesc(); if (bagOpen || equipOpen) closePanels(); }
     });
   }
 
   build(); renderItemBar(); updateArrowUI(); updateZeny(); recalc();
 
   global.HunInv = {
-    healLeft: k => hot[k].remain, showDesc, hideDesc, ARROW, ITEM, bag, equipped, refine, hunC, hotkeys, addItem, usePotion, setArrow, recalc,
+    healLeft: k => hot[k].remain, showDesc, hideDesc, ARROW, ITEM, bag, equipped, refine, hunC, hotkeys, addItem,
+    eqInst, instOf, rankColor, glowStyle, AFF, affText, rerollAff, BAG_MAX, GEAR_SLOT_ID, discardAsk, usePotion, setArrow, recalc,
     arrowId: () => curArrow, arrowImg: id => (ARROW[id] || ARROW.arrow_normal).shoot,
     consumeArrow, onKill, update, buffs, resetBattle,
     clearArrows() { bag.arrow = bag.arrow.filter(x => x.id === 'arrow_normal'); curArrow = 'arrow_normal'; recalc(); updateArrowUI(); closeArrowPop(); if (bagOpen) renderBag(); if (equipOpen) renderCards(); },
@@ -5410,10 +5563,14 @@ window.HunBuf = (function () {
 
   /* ---- 狀態 ---- */
   const TAB = [['consume', '消耗'], ['equip', '裝備'], ['etc', '雜物'], ['card', '卡片'], ['arrow', '箭矢']];
-  const VIEW = [['enh', '強化'], ['rf', '精煉']];
+  const VIEW = [['enh', '強化'], ['rf', '精煉'], ['aff', '賦能']];
   const SL = { weapon: '武器', head: '頭飾', cape: '披肩', armor: '衣服', boots: '靴子' };
+  const SL7 = { weapon: '武器', head: '頭飾', cape: '披肩', armor: '衣服', boots: '靴子', accessoryL: '飾L', accessoryR: '飾R' };   // 賦能：7 個部位
+  let locks = [];                                          // 賦能鎖定：[{t: 鎖種類, v: 鎖數值}]，每條詞條一組
+  const affCost = (rk, n) => { let c = 1; for (let i = 0; i < n; i++) { if (locks[i] && locks[i].t) c++; if (locks[i] && locks[i].v) c++; } return c; };   // 基本 1 顆，每鎖 1 項 +1 顆
+  const gearName = s => I.ITEM[s.id].name + ((s.rank || 0) > 0 ? ' Rank.' + s.rank : '');
   const wh = { consume: [], equip: [], etc: [], card: [], arrow: [] };
-  let view = 'rf', slot = 'weapon', mat = null, whOpen = false, rfOpen = false;
+  let view = 'enh', slot = 'weapon', mat = null, whOpen = false, rfOpen = false;
 
   const have = id => ((I.bag.etc.find(x => x.id === id) || { count: 0 }).count) + ((wh.etc.find(x => x.id === id) || { count: 0 }).count);
   function takeMat(id, n) {   // 先扣背包、再扣倉庫
@@ -5424,20 +5581,29 @@ window.HunBuf = (function () {
   }
 
   /* ---- 倉庫：存入 / 拿出 ---- */
-  function store(t, id) {
+  function store(t, id, ent) {
     if (id === 'arrow_normal' || (t === 'arrow' && id === I.arrowId())) { I.hideDesc(); return log('使用中的箭矢無法存入倉庫', '#ff8a80'); }
-    const i = I.bag[t].findIndex(x => x.id === id); if (i < 0) return;
-    const st = I.bag[t].splice(i, 1)[0], d = wh[t].find(x => x.id === id);
+    const i = ent ? I.bag[t].indexOf(ent) : I.bag[t].findIndex(x => x.id === id); if (i < 0) return;
+    const st = I.bag[t].splice(i, 1)[0], d = t === 'equip' ? null : wh[t].find(x => x.id === id);     // 裝備個體各自獨立，不疊
     if (d) d.count += st.count; else wh[t].push(st);
-    log('存入倉庫：' + I.ITEM[id].name + ' x' + st.count, '#ffd84d');
+    log('存入倉庫：' + (t === 'equip' ? gearName(st) : I.ITEM[id].name + ' x' + st.count), '#ffd84d');
     I.hideDesc(); I.refresh(); renderWh();
     if (G.HunSave) G.HunSave.save(true);
   }
-  function take(t, id) {
-    const s = wh[t].find(x => x.id === id); if (!s) return;
+  function take(t, s) {
+    if (!s || wh[t].indexOf(s) < 0) return;
+    const id = s.id;
+    if (t === 'equip') {                                   // 裝備個體：整件拿出，保留 Rank 與詞條
+      if (I.bag.equip.length >= I.BAG_MAX) { I.hideDesc(); return log('背包已滿，無法拿出', '#ff8a80'); }
+      wh.equip.splice(wh.equip.indexOf(s), 1); I.bag.equip.push(s);
+      log('拿出：' + gearName(s), '#ffd84d');
+      I.hideDesc(); I.refresh(); renderWh();
+      if (G.HunSave) G.HunSave.save(true);
+      return;
+    }
     const lim = I.carryLimit(id), n = Math.min(s.count, Math.max(0, lim - I.carried(id)));
     if (n <= 0) { I.hideDesc(); return log('身上「' + I.ITEM[id].name + '」已達取得上限 ' + lim, '#ff8a80'); }
-    if (!I.bag[t].find(x => x.id === id) && I.bag[t].length >= 15) { I.hideDesc(); return log('背包已滿，無法拿出', '#ff8a80'); }
+    if (!I.bag[t].find(x => x.id === id) && I.bag[t].length >= I.BAG_MAX) { I.hideDesc(); return log('背包已滿，無法拿出', '#ff8a80'); }
     I.addItem(id, n); s.count -= n; if (s.count <= 0) wh[t].splice(wh[t].indexOf(s), 1);
     log('拿出：' + I.ITEM[id].name + ' x' + n + (s.count > 0 ? '（已達取得上限 ' + lim + '，剩 ' + s.count + '）' : ''), '#ffd84d');
     I.hideDesc(); I.refresh(); renderWh();
@@ -5469,6 +5635,19 @@ window.HunBuf = (function () {
     I.recalc(); I.refresh(); renderRf(); renderWh();
     if (G.HunSave) G.HunSave.save(true);
   }
+  function doAffix() {                                     // 賦能：整組詞條大洗牌；沒鎖的重抽，鎖的保留
+    const e = I.equipped[slot], inst = I.instOf(slot), rk = inst.rank || 0, aff = inst.aff || [];
+    if (!e || !rk) return log('此裝備沒有階級，無法賦能', '#ff8a80');
+    if (aff.every((a, i) => locks[i] && locks[i].t && locks[i].v)) return log('詞條全部都鎖住了，沒有可以重抽的', '#ff8a80');
+    const cost = affCost(rk, aff.length);
+    if (have('c_energy_orb') < cost) return log('能量珠不足', '#ff8a80');
+    takeMat('c_energy_orb', cost); sfx('r1');
+    const before = aff.map(I.affText).join(' / ');
+    I.eqInst[slot].aff = I.rerollAff(rk, aff, locks); sfx('ok');
+    log('賦能：' + I.ITEM[e].name + ' [' + before + '] → [' + I.eqInst[slot].aff.map(I.affText).join(' / ') + ']', '#ffffff');
+    I.recalc(); I.refresh(); renderRf(); renderWh();
+    if (G.HunSave) G.HunSave.save(true);
+  }
   function doEnhance() {
     const cur = I.hunC[slot] || 0, need = Math.pow(3, cur), e = I.equipped[slot];
     if (!e) return log('尚未裝備', '#ff8a80');
@@ -5481,7 +5660,7 @@ window.HunBuf = (function () {
 
   /* ---- 畫面 ---- */
   const bg = id => "background-image:url('" + I.ITEM[id].icon + "')";
-  const tabsHtml = (list, cur, act) => list.map(x => '<div class="hi-tab' + (x[0] === cur ? ' active' : '') + '" data-a="' + act + '" data-v="' + x[0] + '">' + x[1] + '</div>').join('');
+  const tabsHtml = (list, cur, act, cls) => list.map(x => '<div class="hi-tab' + (cls ? ' ' + cls : '') + (x[0] === cur ? ' active' : '') + '" data-a="' + act + '" data-v="' + x[0] + '">' + x[1] + '</div>').join('');
 
   function renderWh() {
     if (!whOpen) return;
@@ -5492,7 +5671,7 @@ window.HunBuf = (function () {
     for (let i = 0; i < n; i++) {
       const s = list[i];
       h += s && I.ITEM[s.id]
-        ? '<div class="hi-slot filled" data-a="wi" data-t="' + t + '" data-id="' + s.id + '" style="' + bg(s.id) + '"><span class="hi-cnt">' + (s.count > 1 ? s.count : '') + '</span></div>'
+        ? '<div class="hi-slot filled" data-a="wi" data-t="' + t + '" data-i="' + i + '" style="' + bg(s.id) + (I.ITEM[s.id].equip ? ';' + I.glowStyle(I.rankColor(s.rank || 0)) : '') + '"><span class="hi-cnt">' + (s.count > 1 ? s.count : '') + '</span></div>'
         : '<div class="hi-slot"></div>';
     }
     $('hv-wh-grid').innerHTML = h;
@@ -5509,7 +5688,8 @@ window.HunBuf = (function () {
   function equipInfo() {
     const e = I.equipped[slot], it = e && I.ITEM[e];
     if (!it) return '<div class="hv-eq"><div class="hi-c-icon"></div><div class="hv-l">（未裝備）</div></div>';
-    return '<div class="hv-eq"><div class="hi-c-icon" style="' + bg(e) + ';border-style:solid"></div><div class="hv-l">' + it.name + '<br><span class="hv-dim">裝備等級 Lv.' + I.lvOf(slot) + '</span></div></div>';
+    const rc = I.rankColor(I.instOf(slot).rank);
+    return '<div class="hv-eq"><div class="hi-c-icon" style="' + bg(e) + ';border-style:solid;' + I.glowStyle(rc) + '"></div><div class="hv-l"><span style="color:' + rc + '">' + it.name + '</span><br><span class="hv-dim">裝備等級 Lv.' + I.lvOf(slot) + '</span></div></div>';
   }
 
   function renderRf() {
@@ -5524,6 +5704,21 @@ window.HunBuf = (function () {
         '<div style="height:15px"></div>消耗：星淚碎片 x <span class="' + (n >= need ? 'hv-ok' : 'hv-no') + '">' + need + '</span>', '持有：' + n);
       right.push('<div class="hi-slot filled" style="' + bg('c_star_tear') + '"><span class="hi-cnt">' + n + '</span></div>');
       go = '<button type="button" class="hv-go" data-a="goE"' + (e && n >= need ? '' : ' disabled') + '>強化</button>';
+    } else if (view === 'aff') {
+      const inst = I.instOf(slot), rk = inst.rank || 0, aff = inst.aff || [], n = have('c_energy_orb'), rc = I.rankColor(rk);
+      while (locks.length < aff.length) locks.push({ t: false, v: false });
+      const cost = affCost(rk, aff.length), lk = (i, k, txt) => '<span class="hv-lk' + (locks[i] && locks[i][k] ? ' on' : '') + '" data-a="lk" data-i="' + i + '" data-k="' + k + '">' + txt + '</span>';
+      if (!e) L.push('裝備：—');
+      else if (!rk) L.push('<span class="hv-dim">此裝備沒有階級，無法賦能</span>');
+      else {
+        L.push('<span style="color:' + rc + '">Rank.' + rk + '</span>');
+        aff.forEach((a, i) => L.push(yel(I.affText(a)) + lk(i, 't', '鎖種類') + lk(i, 'v', '鎖數值')));
+        L.push('<div style="height:15px"></div>消耗：能量珠 x <span class="' + (n >= cost ? 'hv-ok' : 'hv-no') + '">' + cost + '</span>', '持有：' + n,
+          '<span class="hv-dim">基本 1 顆，每鎖 1 項 +1 顆</span>');
+      }
+      right.push('<div class="hi-slot filled" style="' + bg('c_energy_orb') + '"><span class="hi-cnt">' + n + '</span></div>');
+      const free = aff.some((a, i) => !(locks[i] && locks[i].t && locks[i].v));
+      go = '<button type="button" class="hv-go" data-a="goA"' + (e && rk > 0 && free && n >= cost ? '' : ' disabled') + '>賦能</button>';
     } else {
       const m = mat && I.ITEM[mat].rf, safe = safeOf(slot);
       const rv = r => I.slotVal(slot, r, 0) - I.slotVal(slot, 0, 0);   // 武器：只算精煉帶來的 Atk
@@ -5547,10 +5742,11 @@ window.HunBuf = (function () {
       if (!ids.length) right.push('<div class="hv-l hv-dim" style="grid-column:1/-1">沒有可用材料</div>');
       go = '<button type="button" class="hv-go" data-a="goR"' + (e && m ? '' : ' disabled') + '>精煉</button>';
     }
-    $('hv-rf').innerHTML = '<div class="hi-title">' + (view === 'enh' ? '強化' : '精煉') + '</div><div class="hi-line"></div>' +
-      '<div class="hv-row">' + tabsHtml(VIEW, view, 'view') + '<span class="hv-gap"></span>' + tabsHtml(Object.keys(SL).map(k => [k, SL[k]]), slot, 'slot') + '</div>' +
-      '<div class="hv-cols"><div class="hv-left">' + equipInfo() + L.map(x => '<div class="hv-l">' + x + '</div>').join('') + go + '</div>' +
-      '<div class="hv-right">' + right.join('') + '</div></div>';
+    const slotList = view === 'aff' ? SL7 : SL, vt = tabsHtml(VIEW, view, 'view', 'vt'), stt = tabsHtml(Object.keys(slotList).map(k => [k, slotList[k]]), slot, 'slot');
+    $('hv-rf').innerHTML = '<div class="hi-title">' + ({ enh: '強化', rf: '精煉', aff: '賦能' })[view] + '</div><div class="hi-line"></div>' +
+      (view === 'aff' ? '<div class="hv-row">' + vt + '</div><div class="hv-row">' + stt + '</div>' : '<div class="hv-row">' + vt + '<span class="hv-gap"></span>' + stt + '</div>') +
+      '<div class="hv-cols' + (view === 'aff' ? ' aff' : '') + '"><div class="hv-left">' + equipInfo() + L.map(x => '<div class="hv-l">' + x + '</div>').join('') + go + '</div>' +
+      '<div class="hv-right' + (view === 'aff' ? ' aff' : '') + '">' + right.join('') + '</div></div>';
   }
 
   /* ---- 開關 ---- */
@@ -5567,7 +5763,7 @@ window.HunBuf = (function () {
     renderWh();
   }
   function openRf() {
-    I.closePanels();
+    I.closePanels(); view = 'enh'; if (!SL[slot]) slot = 'weapon'; locks = [];
     rfOpen = true; $('hv-rf').style.display = 'block'; renderRf();
   }
 
@@ -5583,9 +5779,10 @@ window.HunBuf = (function () {
     '#hv-wh-grid{display:grid;grid-template-columns:repeat(5,90px);grid-auto-rows:90px;gap:15px;max-height:300px;overflow-y:auto;scrollbar-width:none}#hv-wh-grid::-webkit-scrollbar{display:none}' +
     '#hv-wh .hi-slot{border-color:rgba(230,194,0,.6)}#hv-wh .hi-slot.filled{border-color:#ffd84d}' +
     '.hv-m1{white-space:nowrap}.hv-m1 b{color:#ffffff}.hv-m2{display:flex;justify-content:space-between;font-size: 30px;color:#ffffff;white-space:nowrap}' +
+    '.hv-lk{display:inline-block;margin-left:15px;padding:0 12px;border:3px solid #7f8c8d;border-radius:9px;color:#aaa;cursor:pointer}.hv-lk.on{border-color:#ff7f9f;background:rgba(255,127,159,.3);color:#fff}' +
     '.hv-b{color:#3498db}.hv-y{color:#ffd84d}.hv-wt{color:#fff}.hv-ok{color:#2ecc71}.hv-no{color:#ff8a80}.hv-dim{color:#aaa;font-size: 30px}.hv-tip{color:#ffffff;font-size: 30px}' +
     '#hv-rf .hv-row{display:flex;gap:15px;align-items:center;margin-bottom:15px}#hv-rf .hv-gap{flex:1}' +
-    '#hv-rf .hv-cols{display:flex;gap:30px;align-items:flex-start}#hv-rf .hv-left{flex:1;min-width:0}#hv-rf .hv-right{width:405px;display:grid;grid-template-columns:repeat(4,90px);grid-auto-rows:90px;gap:15px}' +
+    '#hv-rf .hv-cols{display:flex;gap:30px;align-items:flex-start}#hv-rf .hv-left{flex:1;min-width:0}#hv-rf .hv-right.aff{width:90px;grid-template-columns:90px}#hv-rf .hv-cols.aff .hv-l{white-space:nowrap}#hv-rf .hi-tab.vt{background:rgba(46,204,113,.3)}#hv-rf .hi-tab.vt.active{background:rgba(46,204,113,.9);border-color:#fff}#hv-rf .hv-right{width:405px;display:grid;grid-template-columns:repeat(4,90px);grid-auto-rows:90px;gap:15px}' +
     '#hv-rf .hv-eq{display:flex;gap:15px;align-items:center;margin-bottom:9px}#hv-rf .hv-l{line-height:1.45;padding:2px 0}' +
     '#hv-rf .hi-slot.filled{cursor:pointer}#hv-rf .hv-sel{border-color:#ff7f9f;box-shadow:0 0 12px #ff7f9f}' +
     '.hv-go{margin-top:12px;width:180px;height:60px;border-radius:9px;border:3px solid #ff7f9f;background:#4caf50;color:#fff;font:inherit;cursor:pointer;box-shadow:0 3px 9px rgba(0,0,0,.6)}' +
@@ -5614,15 +5811,17 @@ window.HunBuf = (function () {
     const el = e.target.closest('[data-a]'); if (!el) return; e.stopPropagation();
     if (el.dataset.a === 'wtab') { I.setTab(el.dataset.v); renderWh(); }
     else if (el.dataset.a === 'wi') {
-      const t = el.dataset.t, id = el.dataset.id;
-      I.showDesc(id, el, [['拿出', 'green', () => take(t, id)], ['取消', 'gray', I.hideDesc]]);
+      const t = el.dataset.t, s = wh[t][Number(el.dataset.i)]; if (!s) return;
+      I.showDesc(s.id, el, [['拿出', 'green', () => take(t, s)], ['取消', 'gray', I.hideDesc]], s);
     }
   });
   $('hv-rf').addEventListener('click', e => {
     const el = e.target.closest('[data-a]'); if (!el) return; e.stopPropagation();
     const a = el.dataset.a;
-    if (a === 'view') view = el.dataset.v;
-    else if (a === 'slot') { slot = el.dataset.v; mat = null; }
+    if (a === 'view') { view = el.dataset.v; if (view !== 'aff' && !SL[slot]) slot = 'weapon'; locks = []; }
+    else if (a === 'slot') { slot = el.dataset.v; mat = null; locks = []; }
+    else if (a === 'lk') { const i = Number(el.dataset.i), k = el.dataset.k; locks[i] = locks[i] || { t: false, v: false }; locks[i][k] = !locks[i][k]; }
+    else if (a === 'goA') return doAffix();
     else if (a === 'mat') mat = el.dataset.id;
     else if (a === 'goR') return doRefine();
     else if (a === 'goE') return doEnhance();
@@ -5634,7 +5833,7 @@ window.HunBuf = (function () {
   setInterval(() => { if (!G.isInVillage && (whOpen || rfOpen)) hide(); else if (whOpen) renderMid(); }, 300);   // 離開村子自動關閉
 
   hide(); I.recalc();
-  G.HunVillage = { wh, rate, hide, whOpen: () => whOpen, onTab: renderWh, bagClick: (t, id, el) => I.showDesc(id, el, [['存入', 'blue', () => store(t, id)], ['取消', 'gray', I.hideDesc]]) };
+  G.HunVillage = { wh, rate, hide, whOpen: () => whOpen, onTab: renderWh, bagClick: (t, id, el, ent) => I.showDesc(id, el, [['存入', 'blue', () => store(t, id, ent)], ['丟棄', 'red', () => I.discardAsk(t, ent, el)], ['取消', 'gray', I.hideDesc]], ent) };
 })(window);
 
 
@@ -5864,6 +6063,7 @@ window.HunBuf = (function () {
         refine: Object.assign({}, I.refine),
         hunC: Object.assign({}, I.hunC),
         rolls: I.rolls ? JSON.parse(JSON.stringify(I.rolls)) : { weapon: [] },
+        eqInst: JSON.parse(JSON.stringify(I.eqInst || {})),
         curArrow: I.arrowId(),
         hotkeys: I.hotkeys.slice()
       } : null,
@@ -5910,11 +6110,18 @@ window.HunBuf = (function () {
       }
     }
 
+    const fixGear = x => {                                   // 裝備個體：整理 Rank / 詞條，壞資料直接清掉
+      if (x && I.ITEM[x.id] && I.ITEM[x.id].equip) {
+        x.rank = Math.max(0, Number(x.rank) | 0);
+        x.aff = (Array.isArray(x.aff) && x.rank > 0 ? x.aff : []).filter(a => a && I.AFF.some(d => d[0] === a.k) && Number.isFinite(a.v)).map(a => ({ k: a.k, v: a.v }));
+      }
+      return x;
+    };
     if (I && data.inv) {
       if (data.inv.bag) {
         ['consume', 'equip', 'etc', 'card', 'arrow'].forEach(tab => {
           if (Array.isArray(data.inv.bag[tab])) {
-            I.bag[tab] = data.inv.bag[tab].filter(x => x && I.ITEM[x.id]);
+            I.bag[tab] = data.inv.bag[tab].filter(x => x && I.ITEM[x.id]).map(fixGear);
           }
         });
         if (!I.bag.arrow.find(x => x.id === 'arrow_normal')) {
@@ -5922,6 +6129,11 @@ window.HunBuf = (function () {
         }
       }
       if (data.inv.equipped) Object.assign(I.equipped, data.inv.equipped);
+      Object.keys(I.eqInst).forEach(k => { delete I.eqInst[k]; });
+      if (data.inv.eqInst && typeof data.inv.eqInst === 'object') Object.keys(data.inv.eqInst).forEach(k => {
+        const x = fixGear(Object.assign({ id: I.equipped[k] }, data.inv.eqInst[k]));
+        if (I.equipped[k] && x.rank > 0) I.eqInst[k] = { rank: x.rank, aff: x.aff };
+      });
       if (data.inv.refine) Object.assign(I.refine, data.inv.refine);
       if (data.inv.hunC) Object.assign(I.hunC, data.inv.hunC);
       if (data.inv.rolls && I.rolls) {
@@ -5940,7 +6152,7 @@ window.HunBuf = (function () {
     if (V && data.warehouse) {
       ['consume', 'equip', 'etc', 'card', 'arrow'].forEach(tab => {
         if (Array.isArray(data.warehouse[tab])) {
-          V.wh[tab] = data.warehouse[tab].filter(x => x && I && I.ITEM[x.id]);
+          V.wh[tab] = data.warehouse[tab].filter(x => x && I && I.ITEM[x.id]).map(fixGear);
         }
       });
     }
